@@ -1,0 +1,132 @@
+--- origsrc/nemiver-0.7.3/configure.ac	2009-12-07 03:17:07.000000000 -0600
++++ src/nemiver-0.7.3/configure.ac	2010-01-25 23:44:29.129698700 -0600
+@@ -365,7 +365,7 @@ if test  "x$NEMIVER_DEVEL" = "xon" ; the
+     CFLAGS="$DODJI_CFLAGS"
+ else
+     DODJI_CFLAGS="$REQUIRED_FLAGS"
+-    DODJI_CXXFLAGS="$DODJI_CFAGS -fuse-cxa-atexit"
++    DODJI_CXXFLAGS="$DODJI_CFLAGS"
+     CFLAGS="$CFLAGS $DODJI_CFLAGS"
+     CXXFLAGS="$CXXFLAGS $DODJI_CXXFLAGS"
+ fi
+--- origsrc/nemiver-0.7.3/src/common/Makefile.am	2009-07-03 15:13:23.000000000 -0500
++++ src/nemiver-0.7.3/src/common/Makefile.am	2010-01-25 23:01:32.094300700 -0600
+@@ -68,7 +68,7 @@ publicheaders_DATA=$(headers)
+ publicheadersdir=$(NEMIVER_INCLUDE_DIR)/common
+ libnemivercommon_la_LDFLAGS=@NEMIVERCOMMON_LIBS@ -lutil \
+ 		-avoid-version -rpath $(libdir)/nemiver \
+-		 -Wl,--as-needed
++		-no-undefined
+ 
+ #don't install libnemivercommon.pc yet, as no other program
+ #but nemiver uses the libnemivercommon library yet.
+--- origsrc/nemiver-0.7.3/src/common/nmv-proc-utils.cc	2009-11-21 15:43:31.000000000 -0600
++++ src/nemiver-0.7.3/src/common/nmv-proc-utils.cc	2010-01-25 23:16:26.790474400 -0600
+@@ -27,7 +27,7 @@
+ #include <unistd.h>
+ #include <fcntl.h>
+ #include <signal.h>
+-#if defined(_GNU_SOURCE)
++#if defined(__linux__) || defined(__CYGWIN__)
+ # include <pty.h>
+ #elif defined(__FreeBSD__)
+ # include <sys/types.h>
+@@ -44,10 +44,14 @@
+ #include "nmv-exception.h"
+ #include "nmv-log-stream-utils.h"
+ 
+-#if (defined(__FreeBSD__) || defined(__OpenBSD__)) && !defined(__MAX_BAUD)
++#if !defined(__MAX_BAUD)
+ #define __MAX_BAUD B38400
+ #endif
+ 
++#ifndef ECHOPRT
++#define ECHOPRT 0
++#endif
++
+ namespace nemiver {
+ namespace common {
+ 
+--- origsrc/nemiver-0.7.3/src/confmgr/Makefile.am	2009-02-26 16:55:44.000000000 -0600
++++ src/nemiver-0.7.3/src/confmgr/Makefile.am	2010-01-25 23:01:52.627475100 -0600
+@@ -10,7 +10,7 @@ nmv-gconf-mgr.cc
+ publicheaders_DATA=$(headers)
+ publicheadersdir=$(NEMIVER_INCLUDE_DIR)/dynmods
+ 
+-libgconfmgrmod_la_LDFLAGS=-module -avoid-version -Wl,--as-needed
++libgconfmgrmod_la_LDFLAGS=-module -avoid-version -no-undefined
+ libgconfmgrmod_la_LIBADD=@NEMIVERCOMMON_LIBS@ @GCONF_LIBS@ \
+         $(top_builddir)/src/common/libnemivercommon.la
+ 
+--- origsrc/nemiver-0.7.3/src/dbdimpl/sqlite/Makefile.am	2009-02-26 16:55:44.000000000 -0600
++++ src/nemiver-0.7.3/src/dbdimpl/sqlite/Makefile.am	2010-01-25 23:03:35.936384100 -0600
+@@ -8,7 +8,7 @@ nmv-sqlite-cnx-drv.h
+ 
+ libnemiverdbdsqlite_la_SOURCES=$(sources)
+ 
+-libnemiverdbdsqlite_la_LDFLAGS= -module -avoid-version -Wl,--as-needed
++libnemiverdbdsqlite_la_LDFLAGS= -module -avoid-version -no-undefined
+ libnemiverdbdsqlite_la_LIBADD= \
+ @SQLITE3_LIBS@ @NEMIVERCOMMON_LIBS@ \
+ $(top_builddir)/src/common/libnemivercommon.la
+--- origsrc/nemiver-0.7.3/src/dbgengine/Makefile.am	2009-07-03 11:47:08.000000000 -0500
++++ src/nemiver-0.7.3/src/dbgengine/Makefile.am	2010-01-26 01:58:00.739936600 -0600
+@@ -92,29 +92,30 @@ libgdbengine_la_CFLAGS=-fPIC -DPIC
+ publicheaders_DATA=$(dynmodheaders)
+ publicheadersdir=$(NEMIVER_INCLUDE_DIR)/dynmods
+ 
+-libgdbmod_la_LDFLAGS=-module -avoid-version -Wl,--as-needed
++libgdbmod_la_LDFLAGS=-module -avoid-version -no-undefined
+ libgdbmod_la_LIBADD=libdbgcommon.la libgdbmiparser.la libgdbengine.la \
+ @NEMIVERCOMMON_LIBS@ \
+ $(top_builddir)/src/langs/libnemivercparser.la \
+ $(top_builddir)/src/common/libnemivercommon.la
+ 
+-libvarlistmod_la_LDFLAGS=-module -avoid-version
++libvarlistmod_la_LDFLAGS=-module -avoid-version -no-undefined
+ libvarlistmod_la_LIBADD=@NEMIVERCOMMON_LIBS@ \
+ 	$(top_builddir)/src/common/libnemivercommon.la
+ 
+-libcpptraitmod_la_LDFLAGS=-module -avoid-version
++libcpptraitmod_la_LDFLAGS=-module -avoid-version -no-undefined
+ libcpptraitmod_la_LIBADD=@NEMIVERCOMMON_LIBS@ \
+ 	$(top_builddir)/src/common/libnemivercommon.la
+ 
+-libvarwalkermod_la_LDFLAGS=-module -avoid-version
++libvarwalkermod_la_LDFLAGS=-module -avoid-version -no-undefined
+ libvarwalkermod_la_LIBADD=@NEMIVERCOMMON_LIBS@ \
++	libgdbengine.la libgdbmiparser.la \
+ 	$(top_builddir)/src/common/libnemivercommon.la
+ 
+-libvarobjwalkermod_la_LDFLAGS=-module -avoid-version
++libvarobjwalkermod_la_LDFLAGS=-module -avoid-version -no-undefined
+ libvarobjwalkermod_la_LIBADD=@NEMIVERCOMMON_LIBS@ \
+ 	$(top_builddir)/src/common/libnemivercommon.la
+ 
+-libvarlistwalkermod_la_LDFLAGS=-module -avoid-version
++libvarlistwalkermod_la_LDFLAGS=-module -avoid-version -no-undefined
+ libvarlistwalkermod_la_LIBADD=@NEMIVERCOMMON_LIBS@ \
+ 	$(top_builddir)/src/common/libnemivercommon.la
+ 
+--- origsrc/nemiver-0.7.3/src/persp/dbgperspective/Makefile.am	2009-07-14 12:30:06.000000000 -0500
++++ src/nemiver-0.7.3/src/persp/dbgperspective/Makefile.am	2010-01-25 23:01:07.173875300 -0600
+@@ -89,7 +89,7 @@ memoryview_sources =
+ endif
+ 
+ libdbgperspectiveplugin_la_SOURCES=$(sources) $(memoryview_sources)
+-libdbgperspectiveplugin_la_LDFLAGS= -module -avoid-version -Wl,--as-needed
++libdbgperspectiveplugin_la_LDFLAGS= -module -avoid-version -no-undefined
+ libdbgperspectiveplugin_la_LIBADD= \
+ @NEMIVERDBGPERSP_LIBS@ \
+ $(top_builddir)/src/common/libnemivercommon.la \
+--- origsrc/nemiver-0.7.3/src/workbench/Makefile.am	2009-02-26 16:55:44.000000000 -0600
++++ src/nemiver-0.7.3/src/workbench/Makefile.am	2010-01-25 23:03:08.305803700 -0600
+@@ -25,7 +25,7 @@ nmv-pref-mgr.cc
+ publicheaders_DATA=$(headers)
+ publicheadersdir=$(NEMIVER_INCLUDE_DIR)/dynmods
+ 
+-libworkbenchmod_la_LDFLAGS=-module -avoid-version -Wl,--as-needed
++libworkbenchmod_la_LDFLAGS=-module -avoid-version -no-undefined
+ libworkbenchmod_la_LIBADD=@NEMIVERWORKBENCH_LIBS@ \
+         $(top_builddir)/src/common/libnemivercommon.la \
+         $(top_builddir)/src/uicommon/libnemiveruicommon.la
